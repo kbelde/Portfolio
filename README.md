@@ -1,9 +1,2 @@
-# About the Project
-This is a ECOMM website data project.
-
-Used the dataset from @kaggle (Downloaded a .csv).
-
-Used Snowflake and loaded the .csv file and processed the data by performing data cleaning like remove duplicates etc.,
-and developed the data model by creating facts and dimensions tables.
-
-Loaded the processed data into Power BI Desktop to develop a report.
+# Kiran Belde Portfolio
+This is the landing page of my portfolio it contains all the Data Analysis work done by me.
