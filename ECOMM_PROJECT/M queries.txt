@@ -1,0 +1,108 @@
+
+
+CART_AND_VIEW	
+"let
+    Source = Snowflake.Databases(""MXWQMEQ-ZGB87938.snowflakecomputing.com"",""COMPUTE_WH""),
+    ECOMM_DB_Database = Source{[Name=""ECOMM_DB"",Kind=""Database""]}[Data],
+    GOLD_LAYER_Schema = ECOMM_DB_Database{[Name=""GOLD_LAYER"",Kind=""Schema""]}[Data],
+    CART_AND_VIEW_Table = GOLD_LAYER_Schema{[Name=""CART_AND_VIEW"",Kind=""Table""]}[Data],
+    #""Columns removed by Measure Killer""= Table.SelectColumns(CART_AND_VIEW_Table,{""SESSION_ID"",""START_TIME"",""END_TIME"",""USER_ID""})
+in
+    #""Columns removed by Measure Killer"""
+
+
+
+SESSION_DIM	
+"let
+    Source = Snowflake.Databases(""MXWQMEQ-ZGB87938.snowflakecomputing.com"",""COMPUTE_WH""),
+    ECOMM_DB_Database = Source{[Name=""ECOMM_DB"",Kind=""Database""]}[Data],
+    GOLD_LAYER_Schema = ECOMM_DB_Database{[Name=""GOLD_LAYER"",Kind=""Schema""]}[Data],
+    SESSION_DIM_Table = GOLD_LAYER_Schema{[Name=""SESSION_DIM"",Kind=""Table""]}[Data],
+    #""Removed Duplicates"" = Table.Distinct(SESSION_DIM_Table, {""SESSION_ID""}),
+    #""Filtered Rows"" = Table.SelectRows(#""Removed Duplicates"", each [SESSION_ID] <> null and [SESSION_ID] <> """")
+in
+    #""Filtered Rows"""
+
+
+USER_DIM	
+
+"let
+    Source = Snowflake.Databases(""MXWQMEQ-ZGB87938.snowflakecomputing.com"",""COMPUTE_WH""),
+    ECOMM_DB_Database = Source{[Name=""ECOMM_DB"",Kind=""Database""]}[Data],
+    GOLD_LAYER_Schema = ECOMM_DB_Database{[Name=""GOLD_LAYER"",Kind=""Schema""]}[Data],
+    USER_DIM_Table = GOLD_LAYER_Schema{[Name=""USER_DIM"",Kind=""Table""]}[Data],
+    #""Added Custom"" = Table.AddColumn(USER_DIM_Table, ""New_Repeat_Cust"", each if([TOTAL_PURCHASES]) = 1 then ""New Customer"" else ""Repeat Customer""),
+    #""Removed Duplicates"" = Table.Distinct(#""Added Custom"", {""USER_ID""}),
+    #""Filtered Rows"" = Table.SelectRows(#""Removed Duplicates"", each [USER_ID] <> null and [USER_ID] <> """"),
+    #""Replaced Value"" = Table.ReplaceValue(#""Filtered Rows"",""UTC"","""",Replacer.ReplaceText,{""FIRST_PURCHASE_DATE"", ""LAST_PURCHASE_DATE""}),
+    #""Changed Type"" = Table.TransformColumnTypes(#""Replaced Value"",{{""FIRST_PURCHASE_DATE"", type datetime}, {""LAST_PURCHASE_DATE"", type datetime}}),
+    #""Columns removed by Measure Killer""= Table.RemoveColumns(#""Changed Type"",{""TOTAL_SPENT""})
+in
+    #""Columns removed by Measure Killer"""
+
+
+PRODUCT_DIM	
+
+"let
+    Source = Snowflake.Databases(""MXWQMEQ-ZGB87938.snowflakecomputing.com"",""COMPUTE_WH""),
+    ECOMM_DB_Database = Source{[Name=""ECOMM_DB"",Kind=""Database""]}[Data],
+    GOLD_LAYER_Schema = ECOMM_DB_Database{[Name=""GOLD_LAYER"",Kind=""Schema""]}[Data],
+    PRODUCT_DIM_Table = GOLD_LAYER_Schema{[Name=""PRODUCT_DIM"",Kind=""Table""]}[Data],
+    #""Merged Queries"" = Table.NestedJoin(PRODUCT_DIM_Table, {""CATEGORY_ID""}, CATEGORY_DIM, {""CATEGORY_ID""}, ""CATEGORY_DIM"", JoinKind.LeftOuter),
+    #""Expanded CATEGORY_DIM"" = Table.ExpandTableColumn(#""Merged Queries"", ""CATEGORY_DIM"", {""Department"", ""Category"", ""Product""}, {""CATEGORY_DIM.Department"", ""CATEGORY_DIM.Category"", ""CATEGORY_DIM.Product""}),
+    #""Renamed Columns"" = Table.RenameColumns(#""Expanded CATEGORY_DIM"",{{""CATEGORY_DIM.Department"", ""Department""}, {""CATEGORY_DIM.Category"", ""Category""}, {""CATEGORY_DIM.Product"", ""Product""}}),
+    #""Columns removed by Measure Killer""= Table.RemoveColumns(#""Renamed Columns"",{""TOTAL_SOLD"",""BRAND""})
+in
+    #""Columns removed by Measure Killer"""
+
+1MEASURES	
+
+"let
+    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(""i45WMlSKjQUA"", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+    #""Changed Type"" = Table.TransformColumnTypes(Source,{{""Column1"", Int64.Type}}),
+    #""Removed Columns"" = Table.RemoveColumns(#""Changed Type"",{""Column1""})
+in
+    #""Removed Columns"""
+
+
+CATEGORY_DIM	
+
+"let
+    Source = Snowflake.Databases(""MXWQMEQ-ZGB87938.snowflakecomputing.com"",""COMPUTE_WH""),
+    ECOMM_DB_Database = Source{[Name=""ECOMM_DB"",Kind=""Database""]}[Data],
+    GOLD_LAYER_Schema = ECOMM_DB_Database{[Name=""GOLD_LAYER"",Kind=""Schema""]}[Data],
+    CATEGORY_DIM_Table = GOLD_LAYER_Schema{[Name=""CATEGORY_DIM"",Kind=""Table""]}[Data],
+    #""Duplicated Column"" = Table.DuplicateColumn(CATEGORY_DIM_Table, ""CATEGORY_CODE"", ""CATEGORY_CODE - Copy""),
+    #""Split Column by Delimiter"" = Table.SplitColumn(#""Duplicated Column"", ""CATEGORY_CODE - Copy"", Splitter.SplitTextByDelimiter(""."", QuoteStyle.Csv), {""CATEGORY_CODE - Copy.1"", ""CATEGORY_CODE - Copy.2"", ""CATEGORY_CODE - Copy.3""}),
+    #""Changed Type"" = Table.TransformColumnTypes(#""Split Column by Delimiter"",{{""CATEGORY_CODE - Copy.1"", type text}, {""CATEGORY_CODE - Copy.2"", type text}, {""CATEGORY_CODE - Copy.3"", type text}}),
+    #""Renamed Columns"" = Table.RenameColumns(#""Changed Type"",{{""CATEGORY_CODE - Copy.3"", ""Product""}, {""CATEGORY_CODE - Copy.2"", ""Category""}, {""CATEGORY_CODE - Copy.1"", ""Department""}}),
+    #""Columns removed by Measure Killer""= Table.RemoveColumns(#""Renamed Columns"",{""TOTAL_SALES"",""TOTAL_ORDERS"",""CATEGORY_CODE""})
+in
+    #""Columns removed by Measure Killer"""
+
+
+SALES_FACT	
+
+"let
+    Source = Snowflake.Databases(""MXWQMEQ-ZGB87938.snowflakecomputing.com"",""COMPUTE_WH""),
+    ECOMM_DB_Database = Source{[Name=""ECOMM_DB"",Kind=""Database""]}[Data],
+    GOLD_LAYER_Schema = ECOMM_DB_Database{[Name=""GOLD_LAYER"",Kind=""Schema""]}[Data],
+    SALES_FACT_Table = GOLD_LAYER_Schema{[Name=""SALES_FACT"",Kind=""Table""]}[Data],
+    #""Filtered Rows"" = Table.SelectRows(SALES_FACT_Table, each ([EVENT_TYPE] = ""purchase"")),
+    #""Replaced Value"" = Table.ReplaceValue(#""Filtered Rows"",""UTC"","""",Replacer.ReplaceText,{""EVENT_TIME""}),
+    #""Changed Type"" = Table.TransformColumnTypes(#""Replaced Value"",{{""EVENT_TIME"", type datetime}}),
+    #""Columns removed by Measure Killer""= Table.RemoveColumns(#""Changed Type"",{""BRAND"",""EVENT_TYPE""})
+in
+    #""Columns removed by Measure Killer"""
+
+
+DIM_DATE	
+
+"let
+    Source = Snowflake.Databases(""MXWQMEQ-ZGB87938.snowflakecomputing.com"",""COMPUTE_WH""),
+    ECOMM_DB_Database = Source{[Name=""ECOMM_DB"",Kind=""Database""]}[Data],
+    GOLD_LAYER_Schema = ECOMM_DB_Database{[Name=""GOLD_LAYER"",Kind=""Schema""]}[Data],
+    DIM_DATE_Table = GOLD_LAYER_Schema{[Name=""DIM_DATE"",Kind=""Table""]}[Data],
+    #""Columns removed by Measure Killer""= Table.RemoveColumns(DIM_DATE_Table,{""WEEK"",""DAYNAME"",""DAY"",""QUARTER""})
+in
+    #""Columns removed by Measure Killer"""

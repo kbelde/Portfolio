@@ -1,0 +1,107 @@
+
+Customer Frequency Segment	
+"
+    IF(USER_DIM[TOTAL_PURCHASES] >= 5, ""Frequent Buyer"", 
+        IF(USER_DIM[TOTAL_PURCHASES] >= 2, ""Returning Buyer"", ""One-Time Buyer""))
+"
+sort	
+
+SESSION_DIM[SESSION_END].[Year] & " " &SESSION_DIM[SESSION_END].[Quarter]
+
+
+Retention	
+
+"
+VAR CohortStartMonth = MIN(SALES_FACT[event_time])
+VAR ActiveUsers = DISTINCTCOUNT(SALES_FACT[user_id])
+VAR TotalCohortUsers = 
+    CALCULATE(
+        DISTINCTCOUNT(SALES_FACT[user_id]), 
+        FILTER(ALL(SALES_FACT), SALES_FACT[event_time] = CohortStartMonth)
+    )
+    VAR RetentionRate = DIVIDE(DIVIDE(ActiveUsers, TotalCohortUsers, 0),10000,0)
+RETURN IF(ISBLANK(RetentionRate), 0, RetentionRate)"
+
+CLV	
+
+"SUM(SALES_FACT[price]) / DISTINCTCOUNT(SALES_FACT[user_id])
+"
+
+TotalRevenue	
+"SUM(SALES_FACT[price])
+"
+
+ChurnRate
+	"
+VAR ChurnedUsers = 
+    COUNTROWS(
+        FILTER(
+            USER_DIM, 
+            USER_DIM[last_purchase_date] < TODAY() - 90
+        )
+    )
+VAR TotalUsers = DISTINCTCOUNT(SALES_FACT[user_id])
+
+RETURN DIVIDE(ChurnedUsers, TotalUsers, 0)"
+
+Cart Count	
+"
+CALCULATE(
+    DISTINCTCOUNT(SESSION_DIM[USER_ID]),
+    SESSION_DIM[EVENT_TYPE] = ""cart""
+)"
+
+Purchase Count	
+"
+CALCULATE(
+    DISTINCTCOUNT(SESSION_DIM[USER_ID]),
+    SESSION_DIM[EVENT_TYPE] = ""purchase""
+)"
+
+Sessions Per User	
+"
+DIVIDE(COUNTROWS(SESSION_DIM), DISTINCTCOUNT('SESSION_DIM'[USER_ID]))
+"
+
+Product View Count	
+"
+CALCULATE(
+    DISTINCTCOUNT(SESSION_DIM[USER_ID]),
+    SESSION_DIM[EVENT_TYPE] = ""view""
+)"
+
+Cohort Month	
+"
+VAR FirstPurchaseDate = 
+    CALCULATE(
+        MIN(SALES_FACT[event_time]), 
+        ALLEXCEPT(SALES_FACT, SALES_FACT[user_id])
+    )
+RETURN (FORMAT(FirstPurchaseDate, ""MMM YYYY"")) "
+
+CohortSort	
+"
+VAR FirstPurchaseDate = 
+    CALCULATE(
+        MIN(SALES_FACT[event_time]), 
+        ALLEXCEPT(SALES_FACT, SALES_FACT[user_id])
+    )
+RETURN YEAR(FirstPurchaseDate) * 100 + MONTH(FirstPurchaseDate)
+"
+
+Months Since First Purchase	
+DATEDIFF(MIN(SALES_FACT[event_time]), [event_time], MONTH)
+
+Customer Segment	
+"
+    IF(SALES_FACT[PRICE] >= 500, ""High-Value"", 
+        IF(SALES_FACT[PRICE] >= 200, ""Mid-Value"", ""Low-Value""))"
+
+SortOrder	
+
+"[Year] * 100 + MONTH(DATEVALUE(""1 "" & [MONTHNAME] & "" "" & FORMAT([YEAR], ""0000"")))
+"
+
+Month_Year	
+"[MONTHNAME] & "" "" & FORMAT([YEAR], ""0000"")
+"
