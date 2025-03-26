@@ -1,0 +1,38 @@
+1️⃣ General Terms
+
+Cohort Analysis – A method to track and analyze groups of users (cohorts) over time based on their first interaction with the store.
+Retention Rate – The percentage of users who continue to engage or make purchases after their initial interaction.
+Churn Rate – The percentage of users who stop engaging or making purchases over a period of time.
+Customer Segmentation – Categorizing customers based on attributes like spending habits, purchase frequency, and engagement.
+E-Commerce Performance – The measurement of key business metrics like revenue, transactions, and customer behavior.
+
+
+2️⃣ Metrics & KPIs
+
+First Purchase Date – The date when a customer made their first purchase in the online store.
+Active Users – The number of unique customers making transactions within a given period.
+Total Cohort Users – The total number of users in a given cohort (e.g., all users who made a first purchase in January 2024).
+Months Since First Purchase – The number of months since a cohort made their first purchase, used for tracking retention over time.
+Retention % – Calculated as (Active Users in a Given Month) ÷ (Total Cohort Users) to measure how many users remain engaged.
+High-Value Customers – Customers who have spent above a defined threshold (e.g., $500+ in total purchases).
+Frequent Buyers – Customers who have made multiple purchases over time, indicating strong engagement.
+One-Time Buyers – Customers who made a single purchase and did not return for additional transactions.
+
+
+3️⃣ Data Modeling & Power BI Elements
+
+SALES_FACT Table – The fact table containing transaction data such as event time, price, user ID, and product details.
+USER_DIM Table – The dimension table storing customer-level attributes like segmentation, frequency, and lifetime value.
+Cohort Month Column – The field representing the month and year of a customer’s first purchase, used for tracking retention trends.
+Cohort Sort Column – A numeric value (YYYYMM format) ensuring proper chronological sorting of cohort months in Power BI.
+Customer Segment Column – A calculated column in DAX that categorizes users based on their total spending.
+Customer Frequency Segment Column – A calculated column in DAX that segments users based on their purchase frequency.
+Matrix Visualization (Heatmap) – A Power BI matrix table with retention percentages, where colors (red/yellow/green) highlight customer drop-off patterns.
+Conditional Formatting (Gradient Heatmap) – A visual effect that applies color gradients to highlight strong (high retention) vs. weak (low retention) performance.
+
+
+4️⃣ Data Filters & Slicers
+
+Customer Segment Slicer – A filter in Power BI that allows users to view retention trends for different customer groups (e.g., high-value vs. low-value customers).
+Date Range Filter – A filter that allows analysis of retention over different time periods (e.g., last 12 months vs. all-time).
+Product Category Filter – A slicer enabling analysis of retention across different product categories (e.g., electronics vs. apparel).
